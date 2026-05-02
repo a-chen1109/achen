@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <meta name="description" content="achen · 数学与应用数学本科 · AI敏捷开发实践者 · 前沿技术落地">
-    <title>achen · AI敏捷开发 | 数学背景 · 前沿落地</title>
+    <meta name="description" content="achen · 数学与应用数学本科 · AI敏捷开发实践者 · 浪尖儿社区AI项目达人候选人">
+    <title>achen · AI敏捷开发 | 浪尖儿社区 · AI项目达人</title>
     <!-- 引入 Three.js 核心库 -->
     <script type="importmap">
         {
@@ -416,6 +416,34 @@
             padding: 1.2rem;
             border: 1px solid var(--border-light);
         }
+        /* 新增：我能为浪尖儿社区做什么 卡片样式 */
+        .contribution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.2rem;
+        }
+        .contribution-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(4px);
+            border-radius: 1.25rem;
+            padding: 1.2rem;
+            border: 1px solid var(--border-light);
+            transition: var(--transition);
+        }
+        .contribution-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+        .contribution-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .contribution-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--accent-primary);
+        }
         footer {
             text-align: center;
             padding: 1.5rem 0;
@@ -479,6 +507,7 @@
                     <a href="#projects-section">项目</a>
                     <a href="#skills">技能</a>
                     <a href="#education">教育</a>
+                    <a href="#contribution">贡献</a>
                 </div>
                 <div class="toolbar">
                     <button class="icon-btn" id="themeToggle" aria-label="深浅色模式">🌓 主题</button>
@@ -680,7 +709,7 @@
     </script>
     
     <script type="module">
-        // 简历数据 - 根据用户要求修改
+        // 简历数据 - 包含新增项目与贡献板块
         const resume = {
             basics: {
                 name: "achen",
@@ -688,12 +717,12 @@
                 phone: "19227541131",
                 city: "广东湛江",
                 website: "敬请期待",
-                tagline: "数学与应用数学本科 · AI敏捷开发实践者 · 从底层数学到云端全链路",
+                tagline: "数学与应用数学本科 · AI敏捷开发实践者 · 浪尖儿社区AI项目达人候选人",
                 bio: "深度践行 Vibe Coding 范式，熟练运用 Trae / Antigravity，擅长复杂开源项目云端部署与底层排障。依托数学背景穿透 AI 底层逻辑。"
             },
             highlights: [
                 { metric: "3项", desc: "独立完成云端/Web/智能体项目落地，0到1全链路主导" },
-                { metric: "75%", desc: "缺乏文档环境下，解决OpenClaw底层依赖冲突并稳定运行" },  // 修改为75%
+                { metric: "75%", desc: "缺乏文档环境下，解决OpenClaw底层依赖冲突并稳定运行" },
                 { metric: "极速开发", desc: "Vibe Coding 驱动，短周期跑通完整二手书交易平台" },
                 { metric: "校级大赛", desc: "AI+教育智能体核心策划，优化高数学习Prompt落地" }
             ],
@@ -704,7 +733,7 @@
                     period: "2025.10 – 至今",
                     details: [
                         "系统推导线性回归、逻辑回归、SVM、决策树核心数学原理（梯度下降/损失函数/核函数）。",
-                        "建立从公式推导到算法设计的完整认知链路"   // 删除“，完成经典算法手稿复现”
+                        "建立从公式推导到算法设计的完整认知链路"
                     ]
                 },
                 {
@@ -738,9 +767,15 @@
                     result: "校级大赛核心策划，锚定高数学习痛点，设计专属智能体任务流，精细打磨教育Prompt，提升模型输出严谨性与可读性。",
                     period: "2025.10 – 2025.11",
                     link: "#"
+                },
+                {
+                    name: "基于 WorkBuddy + Obsidian 的个人知识库体系",
+                    stack: ["WorkBuddy", "Obsidian", "知识管理", "复盘方法", "内容创作"],
+                    result: "在浪尖儿社区持续AI学习氛围中，使用 WorkBuddy 作为效率中台，配合 Obsidian 搭建个人知识库，围绕「复盘反思」「个人经历」「学习辅导」「内容创作」四个模块设计，将碎片信息系统化，有效提升个人学习与任务闭环效率。",
+                    period: "2026.03 – 2026.05",
+                    link: "#"
                 }
             ],
-            // 技能等级全部调整到 75% - 85% 区间
             skills: [
                 { name: "Vibe Coding / AI敏捷开发", level: 82 },
                 { name: "Trae / Antigravity 编程工具", level: 80 },
@@ -756,7 +791,34 @@
                 school: "岭南师范学院 (岭师)",
                 period: "2025.09 – 2029.06",
                 description: "2025年9月入学，主修数学分析、高等代数、概率论、机器学习数学基础，具备严谨逻辑推演与算法建模能力。"
-            }
+            },
+            contributions: [
+                {
+                    icon: "🚀",
+                    title: "AI 敏捷开发实战分享",
+                    desc: "深度践行 Vibe Coding 范式，可组织 mini 工作坊，带社区成员体验从想法到代码的快速落地，激发 AI 项目灵感。"
+                },
+                {
+                    icon: "🧠",
+                    title: "AI 项目孵化与协创",
+                    desc: "利用数学与机器学习基础（LSTM、Transformer 等），协助社区识别潜力项目，参与从选题到 Demo 的全流程。"
+                },
+                {
+                    icon: "📚",
+                    title: "学习辅导与答疑",
+                    desc: "基于知识库中「学习辅导」模块，主动为成员解答高数、机器学习基础、Prompt 工程等问题，降低新人门槛。"
+                },
+                {
+                    icon: "✍️",
+                    title: "内容创作与知识沉淀",
+                    desc: "结合内容创作习惯，为社区撰写 AI 工具评测、学习路线图、项目复盘等文章，丰富社区内容资产。"
+                },
+                {
+                    icon: "🛠️",
+                    title: "效率工具与复盘文化",
+                    desc: "分享 WorkBuddy + Obsidian 知识库搭建经验，帮助社区成员建立个人复盘与知识管理习惯，提升整体协作效率。"
+                }
+            ]
         };
         
         function escapeHtml(str) {
@@ -795,7 +857,8 @@
                 <section id="projects-section"><h2 class="section-title">🚀 项目实践</h2><div class="tabs-container"><div class="tabs-header" id="project-tab-header"></div><div id="project-panes"></div></div></section>
                 <section id="skills"><h2 class="section-title">🛠️ 技能矩阵</h2><div class="skills-grid" id="skills-grid"></div></section>
                 <section id="education"><h2 class="section-title">🎓 教育背景</h2><div class="edu-card"><h3>${escapeHtml(resume.education.school)} · ${escapeHtml(resume.education.degree)}</h3><div style="color: var(--text-muted); margin: 0.3rem 0;">${escapeHtml(resume.education.period)}</div><p>${escapeHtml(resume.education.description)}</p></div></section>
-                <footer><p>© 2025 achen · 持续探索 AI 前沿 · 最后更新 2026年4月</p></footer>
+                <section id="contribution"><h2 class="section-title">🤝 我能为浪尖儿社区做什么</h2><div class="contribution-grid" id="contribution-grid"></div></section>
+                <footer><p>© 2025 achen · 持续探索 AI 前沿 · 浪尖儿社区候选人 · 最后更新 2026年5月</p></footer>
             `;
             const badges = ["Vibe Coding", "AI敏捷开发", "时间序列/LSTM", "云端部署", "数学建模", "Prompt工程"];
             document.getElementById("hero-badges").innerHTML = badges.map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('');
@@ -807,7 +870,6 @@
             const projHeader = document.getElementById("project-tab-header");
             const projPanes = document.getElementById("project-panes");
             projHeader.innerHTML = resume.projects.map((proj, idx) => `<button class="tab-btn" data-proj-tab="${idx}">${escapeHtml(proj.name)}</button>`).join('');
-            // 项目卡片中移除演示按钮（最后的 badge）
             projPanes.innerHTML = resume.projects.map((proj, idx) => `
                 <div class="tab-pane" data-proj-pane="${idx}">
                     <div class="project-card">
@@ -825,7 +887,13 @@
                     <span>${skill.level}%</span>
                 </div>
             `).join('');
-            
+            document.getElementById("contribution-grid").innerHTML = resume.contributions.map(c => `
+                <div class="contribution-card">
+                    <div class="contribution-icon">${c.icon}</div>
+                    <div class="contribution-title">${escapeHtml(c.title)}</div>
+                    <div style="color: var(--text-secondary); font-size:0.85rem;">${escapeHtml(c.desc)}</div>
+                </div>
+            `).join('');
             document.getElementById("copyEmailBtn")?.addEventListener('click', () => { navigator.clipboard.writeText(resume.basics.email); alert("邮箱已复制"); });
             document.querySelectorAll('[data-exp-tab]').forEach((btn,i)=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-exp-pane]').forEach((p,pi)=>p.classList.toggle('active-pane',pi==i));document.querySelectorAll('[data-exp-tab]').forEach((b,bi)=>b.classList.toggle('active',bi==i));}));
             document.querySelectorAll('[data-proj-tab]').forEach((btn,i)=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-proj-pane]').forEach((p,pi)=>p.classList.toggle('active-pane',pi==i));document.querySelectorAll('[data-proj-tab]').forEach((b,bi)=>b.classList.toggle('active',bi==i));}));
