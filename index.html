@@ -1,918 +1,397 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <meta name="description" content="achen · 数学与应用数学本科 · AI敏捷开发实践者 ">
-    <title>achen · AI敏捷开发 </title>
-    <!-- 引入 Three.js 核心库 -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
-            }
-        }
-    </script>
-    <style>
-        /* reset & 基础变量 - 移动优先 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        :root {
-            --bg-surface: rgba(255, 255, 255, 0.88);
-            --bg-card: rgba(255, 255, 255, 0.94);
-            --bg-elevated: rgba(241, 245, 249, 0.85);
-            --text-primary: #0f172a;
-            --text-secondary: #1e293b;
-            --text-muted: #334155;
-            --border-light: rgba(226, 232, 240, 0.7);
-            --accent-primary: #3b82f6;
-            --accent-gradient: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            --accent-soft: rgba(239, 246, 255, 0.9);
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.08);
-            --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.12);
-            --transition: all 0.2s ease;
-        }
-
-        body.dark {
-            --bg-surface: rgba(30, 41, 59, 0.92);
-            --bg-card: rgba(30, 41, 59, 0.96);
-            --bg-elevated: rgba(51, 65, 85, 0.88);
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-light: rgba(51, 65, 85, 0.7);
-            --accent-soft: rgba(30, 41, 59, 0.9);
-        }
-
-        /* 3D 画布作为背景层 */
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: auto;
-        }
-
-        /* 主要内容浮动在背景之上 */
-        .content-wrapper {
-            position: relative;
-            z-index: 10;
-            min-height: 100vh;
-            backdrop-filter: blur(2px);
-        }
-
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            color: var(--text-primary);
-            line-height: 1.5;
-            transition: background 0.2s, color 0.2s;
-            scroll-behavior: smooth;
-            background: transparent;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        }
-
-        /* 导航栏 - 毛玻璃效果 */
-        .navbar {
-            position: sticky;
-            top: 0;
-            backdrop-filter: blur(16px);
-            background: rgba(255, 255, 255, 0.7);
-            border-bottom: 1px solid var(--border-light);
-            z-index: 100;
-            padding: 0.6rem 0;
-        }
-        body.dark .navbar {
-            background: rgba(15, 23, 42, 0.8);
-        }
-        .nav-inner {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-        }
-        .logo {
-            font-weight: 800;
-            font-size: 1.4rem;
-            background: var(--accent-gradient);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.3px;
-        }
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.85rem;
-            padding: 0.4rem 0;
-            transition: var(--transition);
-        }
-        .toolbar {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .icon-btn {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-light);
-            border-radius: 2rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: var(--transition);
-            color: var(--text-secondary);
-            font-weight: 500;
-            min-height: 44px;
-            min-width: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .icon-btn:active {
-            transform: scale(0.96);
-        }
-
-        section {
-            margin: 2.5rem 0;
-            scroll-margin-top: 4.5rem;
-        }
-        .section-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 1.2rem;
-            border-left: 5px solid var(--accent-primary);
-            padding-left: 0.9rem;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-        }
-
-        /* Hero 两栏布局 */
-        .hero {
-            background: var(--bg-surface);
-            backdrop-filter: blur(4px);
-            border-radius: 1.5rem;
-            padding: 1.8rem;
-            margin-top: 1.2rem;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border-light);
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.8rem;
-            align-items: center;
-        }
-        .hero-image {
-            width: 100%;
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-        }
-        .hero-image img {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-            aspect-ratio: 4 / 3;
-        }
-        .hero-content {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-        .hero-name {
-            font-size: 2rem;
-            font-weight: 800;
-            background: var(--accent-gradient);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-        }
-        .hero-tagline {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-        .badge-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin: 0.5rem 0;
-        }
-        .badge {
-            background: var(--accent-soft);
-            color: var(--accent-primary);
-            padding: 0.3rem 0.9rem;
-            border-radius: 2rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border: 1px solid var(--border-light);
-        }
-        .contact-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        .contact-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            background: var(--bg-elevated);
-            padding: 0.4rem 1rem;
-            border-radius: 2rem;
-            font-size: 0.85rem;
-            flex-wrap: wrap;
-        }
-        .copy-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--accent-primary);
-            font-size: 0.9rem;
-            padding: 0.2rem 0.4rem;
-        }
-
-        @media (max-width: 768px) {
-            .hero {
-                grid-template-columns: 1fr;
-                gap: 1.2rem;
-                text-align: center;
-            }
-            .hero-content {
-                align-items: center;
-            }
-            .badge-group {
-                justify-content: center;
-            }
-            .contact-row {
-                justify-content: center;
-            }
-            .hero-image img {
-                max-width: 280px;
-                margin: 0 auto;
-            }
-        }
-
-        .highlights-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1rem;
-        }
-        .highlight-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(4px);
-            border-radius: 1.25rem;
-            padding: 1rem;
-            border: 1px solid var(--border-light);
-            transition: var(--transition);
-        }
-        .highlight-card:active {
-            transform: scale(0.98);
-        }
-        .highlight-number {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--accent-primary);
-        }
-
-        .tabs-header {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: 0.75rem;
-            margin-bottom: 1.2rem;
-        }
-        .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 0.6rem 1rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            border-radius: 2rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: var(--transition);
-            min-height: 44px;
-        }
-        .tab-btn.active {
-            background: var(--accent-primary);
-            color: white;
-        }
-        .tab-pane {
-            display: none;
-            animation: fadeIn 0.2s ease;
-        }
-        .tab-pane.active-pane {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px);}
-            to { opacity: 1; transform: translateY(0);}
-        }
-
-        .exp-card, .project-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(4px);
-            border-radius: 1.25rem;
-            padding: 1.2rem;
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-        }
-        .exp-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-        .exp-meta {
-            color: var(--accent-primary);
-            font-weight: 500;
-            font-size: 0.85rem;
-            margin: 0.25rem 0 0.6rem;
-        }
-        .exp-desc {
-            list-style: disc inside;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        .exp-desc li {
-            margin-bottom: 0.4rem;
-        }
-        .tech-stack {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin: 0.8rem 0;
-        }
-        .tech-tag {
-            background: var(--bg-elevated);
-            padding: 0.2rem 0.7rem;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        .skill-item {
-            background: var(--bg-card);
-            backdrop-filter: blur(4px);
-            border-radius: 1.25rem;
-            padding: 1rem;
-            border: 1px solid var(--border-light);
-            transition: var(--transition);
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .skill-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-primary);
-        }
-        .progress-bar {
-            background: var(--border-light);
-            border-radius: 1rem;
-            height: 8px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            background: var(--accent-gradient);
-            width: 0%;
-            height: 100%;
-            border-radius: 1rem;
-        }
-        .skill-item span {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-
-        .edu-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(4px);
-            border-radius: 1.25rem;
-            padding: 1.2rem;
-            border: 1px solid var(--border-light);
-        }
-        /* 新增：我能为浪尖儿社区做什么 卡片样式 */
-        .contribution-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.2rem;
-        }
-        .contribution-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(4px);
-            border-radius: 1.25rem;
-            padding: 1.2rem;
-            border: 1px solid var(--border-light);
-            transition: var(--transition);
-        }
-        .contribution-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-        }
-        .contribution-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        .contribution-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: var(--accent-primary);
-        }
-        footer {
-            text-align: center;
-            padding: 1.5rem 0;
-            border-top: 1px solid var(--border-light);
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            margin-top: 2rem;
-        }
-        .back2top {
-            position: fixed;
-            bottom: 1.2rem;
-            right: 1.2rem;
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            width: 48px;
-            height: 48px;
-            border-radius: 48px;
-            cursor: pointer;
-            box-shadow: var(--shadow-md);
-            font-size: 1.3rem;
-            transition: var(--transition);
-            z-index: 99;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        @media print {
-            #canvas-container {
-                display: none;
-            }
-            .navbar, .toolbar, .back2top, .copy-btn {
-                display: none !important;
-            }
-            .hero, .exp-card, .project-card {
-                break-inside: avoid;
-                border: 1px solid #ccc;
-                background: white;
-            }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="梁晶晶 · 岭南师范学院 数学与应用数学 · 大二在读 · 数学 × AI 敏捷开发">
+<title>梁晶晶 · 数学 × AI 敏捷开发</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#09090b; --bg2:#0c0c11;
+    --card:rgba(255,255,255,.045); --card2:rgba(255,255,255,.07);
+    --border:rgba(255,255,255,.09);
+    --tx1:#f4f4f5; --tx2:#a1a1aa; --tx3:#71717a;
+    --v1:#a78bfa; --v2:#6366f1; --accent:#22d3ee;
+    --grad:linear-gradient(135deg,#a78bfa,#6366f1);
+    --gradering:linear-gradient(135deg,#a78bfa,#22d3ee);
+    --r:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--tx1);line-height:1.62;overflow-x:hidden}
+  h1,h2,h3,.brand{font-family:"Space Grotesk",Inter,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  /* 背景 */
+  .orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.45;z-index:0;pointer-events:none;animation:float 18s ease-in-out infinite}
+  .orb.a{width:520px;height:520px;background:rgba(124,58,237,.32);top:-140px;left:-100px}
+  .orb.b{width:440px;height:440px;background:rgba(79,70,229,.3);bottom:-120px;right:-60px;animation-delay:-7s}
+  .orb.c{width:360px;height:360px;background:rgba(34,211,238,.15);top:45%;left:55%;animation-delay:-13s}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-20px) scale(1.05)}}
+  @media (prefers-reduced-motion:reduce){.orb{animation:none}}
+  .wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 1.25rem}
+  /* 导航 */
+  nav{position:sticky;top:14px;z-index:50;display:flex;align-items:center;justify-content:space-between;
+      padding:.55rem .9rem;margin:1rem auto;max-width:1080px;border-radius:999px;
+      background:rgba(0,0,0,.42);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.07);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  .brand{font-weight:800;font-size:1.12rem;letter-spacing:-.3px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;text-decoration:none}
+  .links{display:flex;gap:1.1rem;font-size:.9rem;color:var(--tx2)}
+  .links a{color:var(--tx2);text-decoration:none;transition:.2s}
+  .links a:hover{color:#fff}
+  .menu-btn{display:none;background:none;border:none;color:var(--tx2);font-size:1.3rem;cursor:pointer}
+  /* 区块 */
+  .sec{margin:4.5rem 0 0;scroll-margin-top:90px}
+  .sec .kicker{color:var(--v1);font-weight:600;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase}
+  .sec h2{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin:.4rem 0 1.6rem;letter-spacing:-.02em;
+      background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  /* Hero */
+  .hero{min-height:88vh;display:flex;align-items:center;padding:3.5rem 0 2rem}
+  .hero-inner{display:grid;grid-template-columns:1.05fr .95fr;gap:2.5rem;align-items:center;width:100%}
+  .hero .left{text-align:left}
+  .hero .eyebrow{color:var(--tx3);font-size:.92rem;margin-bottom:.9rem;display:flex;gap:.55rem;align-items:center;flex-wrap:wrap}
+  .hero h1{font-size:clamp(2.8rem,7vw,5.2rem);font-weight:800;letter-spacing:-.04em;line-height:1.05;
+      background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .slogan{font-size:clamp(1.05rem,2.2vw,1.45rem);font-weight:700;margin:.9rem 0 .5rem;
+      background:var(--gradering);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.tag{color:var(--tx2);max-width:540px;margin:0 0 1.3rem;font-size:.98rem}
+  .badges{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.6rem}
+  .badge{background:var(--card);border:1px solid var(--border);color:var(--tx2);padding:.34rem .9rem;border-radius:999px;font-size:.8rem;font-weight:500}
+  .cta{display:flex;gap:.8rem;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:.45rem;text-decoration:none;border-radius:14px;padding:.72rem 1.45rem;font-weight:600;font-size:.92rem;transition:.2s}
+  .btn.pri{background:var(--grad);color:#fff;box-shadow:0 8px 24px rgba(99,102,241,.35)}
+  .btn.pri:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(99,102,241,.45)}
+  .btn.ghost{border:1px solid var(--border);color:var(--tx2)}
+  .btn.ghost:hover{border-color:rgba(167,139,250,.5);color:#fff}
+  .meta-line{display:flex;gap:1.2rem;flex-wrap:wrap;color:var(--tx3);font-size:.85rem;margin-top:1.5rem}
+  .meta-line span{display:inline-flex;align-items:center;gap:.35rem}
+  .meta-line svg{width:16px;height:16px;stroke:var(--accent);stroke-width:2;fill:none}
+  .photo-card{position:relative;background:linear-gradient(var(--bg),var(--bg)) padding-box,var(--gradering) border-box;border:2px solid transparent;border-radius:var(--r);padding:.45rem;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  .photo-card img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:14px;filter:saturate(.95) contrast(1.02)}
+  .photo-card .cap{position:absolute;left:1rem;right:1rem;bottom:1.2rem;padding:.6rem .9rem;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-weight:600;font-size:.85rem}
+  /* 卡片网格 */
+  .grid{display:grid;gap:1rem}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.35rem;backdrop-filter:blur(8px);transition:.25s}
+  .card:hover{border-color:rgba(167,139,250,.4);transform:translateY(-3px);background:var(--card2)}
+  .card .num{font-size:2.4rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+  .card .num-sub{color:var(--tx3);font-size:.82rem;margin-top:.35rem}
+  .card h3{font-size:1.05rem;margin:.4rem 0 .3rem;font-weight:700}
+  .card p{color:var(--tx2);font-size:.88rem}
+  .card .lab{color:var(--accent);font-weight:600;font-size:.78rem;letter-spacing:.05em}
+  /* 关于 */
+  .about-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1.4rem}
+  .info-item{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem}
+  .info-item .k{color:var(--tx3);font-size:.78rem;margin-bottom:.3rem}
+  .info-item .v{font-weight:600;font-size:.95rem}
+  .traits{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+  .trait{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem}
+  .trait b{display:inline-flex;align-items:center;gap:.5rem;font-size:.95rem;margin-bottom:.4rem}
+  .trait .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.15)}
+  .trait p{color:var(--tx2);font-size:.85rem}
+  .hobby-list{display:flex;flex-wrap:wrap;gap:.5rem}
+  /* 技能 */
+  .tier{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem 1.3rem;margin-bottom:1rem}
+  .tier .tierhead{display:flex;align-items:center;gap:.6rem;font-weight:700;margin-bottom:.8rem}
+  .tier .tierhead .pill{font-size:.72rem;padding:.2rem .6rem;border-radius:999px;background:rgba(167,139,250,.16);color:var(--v1);border:1px solid rgba(167,139,250,.25)}
+  .tags{display:flex;flex-wrap:wrap;gap:.5rem}
+  .tag{background:var(--card2);border:1px solid var(--border);color:var(--tx2);padding:.3rem .75rem;border-radius:999px;font-size:.8rem}
+  .method{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1.2rem}
+  .method .card .lbl{color:var(--accent);font-weight:600;font-size:.8rem}
+  /* 作品 */
+  .awards{display:grid;gap:.7rem;margin-bottom:1.8rem}
+  .award{display:flex;gap:.8rem;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem}
+  .award .rank{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:.9rem;background:rgba(167,139,250,.16);color:var(--v1);border:1px solid rgba(167,139,250,.25)}
+  .award .tt{font-weight:600;font-size:.95rem}
+  .award .st{color:var(--accent);font-size:.8rem;font-weight:600}
+  .award .ds{color:var(--tx3);font-size:.82rem;margin-top:.15rem}
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:1rem}
+  .proj{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.35rem;transition:.25s}
+  .proj:hover{border-color:rgba(167,139,250,.4);background:var(--card2);transform:translateY(-3px)}
+  .proj .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;margin-bottom:.5rem}
+  .proj .ph h3{font-size:1.05rem;font-weight:700}
+  .proj .pb{font-size:.7rem;color:var(--v1);background:rgba(167,139,250,.14);padding:.18rem .55rem;border-radius:999px;font-weight:600;white-space:nowrap}
+  .proj .brief{color:var(--tx2);font-size:.9rem;margin-bottom:.65rem}
+  .proj .points{list-style:none;margin:0 0 .7rem;padding:0}
+  .proj .points li{position:relative;color:var(--tx2);font-size:.84rem;padding-left:1.15rem;margin-bottom:.35rem}
+  .proj .points li::before{content:"";position:absolute;left:0;top:.35rem;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .proj .contrib{color:var(--tx3);font-size:.82rem;margin-bottom:.85rem;border-left:2px solid rgba(34,211,238,.35);padding-left:.65rem}
+  .proj .tags .tag{font-size:.78rem}
+  .sub-h{font-size:1.05rem;font-weight:700;margin:1.8rem 0 .9rem;color:var(--tx1)}
+  .sub-h .emo{color:var(--accent);margin-right:.4rem}
+  /* 进行中 */
+  .explore{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-top:1rem}
+  .exp{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem}
+  .exp .et{font-weight:700;font-size:.95rem;margin-bottom:.25rem}
+  .exp .ed{color:var(--tx2);font-size:.85rem}
+  /* 时间线 */
+  .timeline{position:relative;margin-left:.6rem;padding-left:1.5rem;border-left:1px solid rgba(167,139,250,.3)}
+  .tl-item{position:relative;padding:0 0 1.1rem 0}
+  .tl-item::before{content:"";position:absolute;left:-1.83rem;top:.3rem;width:12px;height:12px;border-radius:50%;background:var(--grad);box-shadow:0 0 0 4px rgba(99,102,241,.18)}
+  .tl-item .date{color:var(--accent);font-weight:700;font-size:.85rem;letter-spacing:.02em}
+  .tl-item .txt{color:var(--tx2);font-size:.92rem}
+  .tl-item .sub{color:var(--tx3);font-size:.82rem;margin-top:.15rem}
+  /* 联系 */
+  .contact{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+  .contact .card .lab{color:var(--tx3);font-size:.8rem;margin-bottom:.35rem;display:flex;align-items:center;gap:.35rem}
+  .contact .card .lab svg{width:15px;height:15px;stroke:var(--accent);stroke-width:2;fill:none}
+  .contact .card .val{font-size:1.15rem;font-weight:700}
+  .contact .card .val .copy{background:none;border:none;color:var(--v1);cursor:pointer;font-size:1rem;margin-left:.4rem}
+  /* Footer */
+  footer{margin-top:5rem;padding:2.4rem 0;border-top:1px solid var(--border);color:var(--tx3);text-align:center;font-size:.85rem;position:relative;z-index:2}
+  footer .sig{background:var(--gradering);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}
+  /* 入场动画 */
+  .rv{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .rv.in{opacity:1;transform:none}
+  @media (max-width:900px){
+    .hero-inner{grid-template-columns:1fr}
+    .hero .left{text-align:center}
+    .hero p.tag{margin-left:auto;margin-right:auto}
+    .photo-card{max-width:360px;margin:0 auto}
+  }
+  @media (max-width:720px){
+    .links{display:none;position:absolute;top:calc(100% + .6rem);left:0;right:0;flex-direction:column;gap:0;background:rgba(9,9,11,.92);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:.6rem 0}
+    .links.open{display:flex}
+    .links a{padding:.75rem 1.4rem;color:var(--tx1)}
+    .menu-btn{display:block}
+    .hero{min-height:auto;padding-top:2.5rem}
+    .meta-line{justify-content:center}
+    .proj-grid,.g2{grid-template-columns:1fr}
+  }
+</style>
 </head>
 <body>
-    <!-- 3D 粒子画布容器 -->
-    <div id="canvas-container"></div>
+  <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
 
-    <div class="content-wrapper">
-        <nav class="navbar">
-            <div class="container nav-inner">
-                <div class="logo">achen.dev</div>
-                <div class="nav-links">
-                    <a href="#hero">首页</a>
-                    <a href="#highlights">亮点</a>
-                    <a href="#exp-section">经历</a>
-                    <a href="#projects-section">项目</a>
-                    <a href="#skills">技能</a>
-                    <a href="#education">教育</a>
-                    <a href="#contribution">贡献</a>
-                </div>
-                <div class="toolbar">
-                    <button class="icon-btn" id="themeToggle" aria-label="深浅色模式">🌓 主题</button>
-                    <button class="icon-btn" id="printBtn" aria-label="打印简历">🖨️ 打印</button>
-                </div>
-            </div>
-        </nav>
-
-        <main class="container">
-            <div id="app-root"></div>
-        </main>
-        <button class="back2top" id="back2top" aria-label="返回顶部">↑</button>
+  <nav>
+    <a class="brand" href="#top">梁晶晶</a>
+    <div class="links">
+      <a href="#about">关于</a><a href="#skills">技能</a><a href="#work">作品</a>
+      <a href="#timeline">成长</a><a href="#contact">联系</a>
     </div>
+    <button class="menu-btn" aria-label="菜单">☰</button>
+  </nav>
 
-    <script type="module">
-        import * as THREE from 'three';
+  <div class="wrap" id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="left">
+          <div class="eyebrow">
+            <span>岭南师范学院</span><span>·</span><span>数学与应用数学</span><span>·</span><span class="hi">大二在读</span>
+          </div>
+          <h1>梁晶晶</h1>
+          <div class="slogan">用数学穿透 AI，用 AI 加速落地</div>
+          <p class="tag">一名把数学的严谨和 AI 敏捷开发的效率结合起来的大学生，兴趣驱动、敢想敢试，从想法到落地的每个环节都想自己跑通。</p>
+          <div class="badges">
+            <span class="badge">数学与应用数学（本科）</span>
+            <span class="badge">AI 敏捷开发</span>
+            <span class="badge">绩点 4.06 / 5.0</span>
+            <span class="badge">数学建模 / 竞赛</span>
+          </div>
+          <div class="cta">
+            <a class="btn pri" href="#work">查看我的作品 →</a>
+            <a class="btn ghost" href="#contact">联系我</a>
+          </div>
+          <div class="meta-line">
+            <span><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>广东湛江</span>
+            <span><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>大二在读</span>
+            <span><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>兴趣驱动的行动派</span>
+          </div>
+        </div>
+        <div class="photo-card rv">
+          <img src="images/photo.jpg" alt="梁晶晶近况" width="800" height="1000" loading="eager">
+          <div class="cap">兴趣驱动 · 敢想敢试</div>
+        </div>
+      </div>
+    </section>
 
-        // --- 3D 粒子系统配置 (保持原有效果) ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = null;
-        
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 30;
-        camera.position.y = 2;
-        
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
-        
-        const PARTICLE_COUNT = 1800;
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const colors = new Float32Array(PARTICLE_COUNT * 3);
-        const velocities = [];
-        
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            const radius = 18;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(2 * Math.random() - 1);
-            const x = radius * Math.sin(phi) * Math.cos(theta);
-            const y = radius * Math.sin(phi) * Math.sin(theta) * 0.8;
-            const z = radius * Math.cos(phi);
-            positions[i*3] = x + (Math.random() - 0.5) * 6;
-            positions[i*3+1] = y + (Math.random() - 0.5) * 5;
-            positions[i*3+2] = z + (Math.random() - 0.5) * 8;
-            
-            velocities.push({
-                x: (Math.random() - 0.5) * 0.02,
-                y: (Math.random() - 0.5) * 0.02,
-                z: (Math.random() - 0.5) * 0.02
-            });
-            
-            const color = new THREE.Color().setHSL(0.55 + Math.random() * 0.2, 0.8, 0.6);
-            colors[i*3] = color.r;
-            colors[i*3+1] = color.g;
-            colors[i*3+2] = color.b;
-        }
-        
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        
-        const particleMaterial = new THREE.PointsMaterial({
-            size: 0.28,
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            transparent: true,
-            opacity: 0.9
-        });
-        
-        const particleSystem = new THREE.Points(geometry, particleMaterial);
-        scene.add(particleSystem);
-        
-        const starCount = 800;
-        const starGeo = new THREE.BufferGeometry();
-        const starPos = [];
-        for (let i = 0; i < starCount; i++) {
-            starPos.push((Math.random() - 0.5) * 70);
-            starPos.push((Math.random() - 0.5) * 40);
-            starPos.push((Math.random() - 0.5) * 50 - 20);
-        }
-        starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPos), 3));
-        const starMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.12, transparent: true, blending: THREE.AdditiveBlending });
-        const starField = new THREE.Points(starGeo, starMat);
-        scene.add(starField);
-        
-        let time = 0;
-        let mouseX = 0, mouseY = 0;
-        let targetRotationX = 0, targetRotationY = 0;
-        let currentRotationX = 0, currentRotationY = 0;
-        
-        window.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-            mouseY = (event.clientY / window.innerHeight) * 2 - 1;
-            targetRotationY = mouseX * 0.5;
-            targetRotationX = mouseY * 0.3;
-        });
-        
-        window.addEventListener('touchmove', (event) => {
-            if (event.touches.length) {
-                mouseX = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
-                mouseY = (event.touches[0].clientY / window.innerHeight) * 2 - 1;
-                targetRotationY = mouseX * 0.5;
-                targetRotationX = mouseY * 0.3;
-            }
-        });
-        
-        function randomizeParticles() {
-            const positionsAttr = geometry.attributes.position.array;
-            const colorsAttr = geometry.attributes.color.array;
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                if (Math.random() > 0.6) {
-                    const radius = 18;
-                    const theta = Math.random() * Math.PI * 2;
-                    const phi = Math.acos(2 * Math.random() - 1);
-                    positionsAttr[i*3] = radius * Math.sin(phi) * Math.cos(theta) + (Math.random() - 0.5) * 5;
-                    positionsAttr[i*3+1] = radius * Math.sin(phi) * Math.sin(theta) * 0.8 + (Math.random() - 0.5) * 4;
-                    positionsAttr[i*3+2] = radius * Math.cos(phi) + (Math.random() - 0.5) * 7;
-                } else {
-                    positionsAttr[i*3] += (Math.random() - 0.5) * 1.2;
-                    positionsAttr[i*3+1] += (Math.random() - 0.5) * 1.0;
-                    positionsAttr[i*3+2] += (Math.random() - 0.5) * 1.2;
-                    if (Math.abs(positionsAttr[i*3]) > 32) positionsAttr[i*3] *= 0.9;
-                    if (Math.abs(positionsAttr[i*3+1]) > 28) positionsAttr[i*3+1] *= 0.9;
-                    if (Math.abs(positionsAttr[i*3+2]) > 35) positionsAttr[i*3+2] *= 0.9;
-                }
-                const hue = 0.5 + Math.random() * 0.4;
-                const sat = 0.7 + Math.random() * 0.3;
-                const lit = 0.6 + Math.random() * 0.4;
-                const col = new THREE.Color().setHSL(hue, sat, lit);
-                colorsAttr[i*3] = col.r;
-                colorsAttr[i*3+1] = col.g;
-                colorsAttr[i*3+2] = col.b;
-                
-                velocities[i] = {
-                    x: (Math.random() - 0.5) * 0.025,
-                    y: (Math.random() - 0.5) * 0.025,
-                    z: (Math.random() - 0.5) * 0.025
-                };
-            }
-            geometry.attributes.position.needsUpdate = true;
-            geometry.attributes.color.needsUpdate = true;
-            
-            const starPosAttr = starField.geometry.attributes.position.array;
-            for (let i = 0; i < starCount; i++) {
-                if (Math.random() > 0.7) {
-                    starPosAttr[i*3] += (Math.random() - 0.5) * 1.5;
-                    starPosAttr[i*3+1] += (Math.random() - 0.5) * 1.2;
-                    starPosAttr[i*3+2] += (Math.random() - 0.5) * 1.5;
-                    if (Math.abs(starPosAttr[i*3]) > 55) starPosAttr[i*3] *= 0.95;
-                    if (Math.abs(starPosAttr[i*3+1]) > 40) starPosAttr[i*3+1] *= 0.95;
-                    if (Math.abs(starPosAttr[i*3+2]) > 45) starPosAttr[i*3+2] *= 0.95;
-                }
-            }
-            starField.geometry.attributes.position.needsUpdate = true;
-        }
-        
-        window.addEventListener('click', () => randomizeParticles());
-        window.addEventListener('touchstart', () => randomizeParticles());
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.008;
-            
-            const positionsAttr = geometry.attributes.position.array;
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                positionsAttr[i*3] += velocities[i].x;
-                positionsAttr[i*3+1] += velocities[i].y;
-                positionsAttr[i*3+2] += velocities[i].z;
-                if (Math.abs(positionsAttr[i*3]) > 32) velocities[i].x *= -0.98;
-                if (Math.abs(positionsAttr[i*3+1]) > 28) velocities[i].y *= -0.98;
-                if (Math.abs(positionsAttr[i*3+2]) > 35) velocities[i].z *= -0.98;
-            }
-            geometry.attributes.position.needsUpdate = true;
-            
-            starField.rotation.y += 0.0005;
-            starField.rotation.x += 0.0003;
-            
-            currentRotationX += (targetRotationX - currentRotationX) * 0.08;
-            currentRotationY += (targetRotationY - currentRotationY) * 0.08;
-            particleSystem.rotation.x = currentRotationX * 0.5;
-            particleSystem.rotation.y = currentRotationY * 0.8;
-            
-            camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.03;
-            camera.position.y += (-mouseY * 0.3 - camera.position.y) * 0.03;
-            camera.lookAt(0, 0, 0);
-            
-            renderer.render(scene, camera);
-        }
-        
-        animate();
-        
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
-    
-    <script type="module">
-        // 简历数据 - 包含新增项目与贡献板块
-        const resume = {
-            basics: {
-                name: "achen",
-                email: "ywxc1109@qq.com",
-                phone: "19227541131",
-                city: "广东湛江",
-                website: "敬请期待",
-                tagline: "数学与应用数学本科 · AI敏捷开发实践者 · 浪尖儿社区AI项目达人候选人",
-                bio: "深度践行 Vibe Coding 范式，熟练运用 Trae / Antigravity，擅长复杂开源项目云端部署与底层排障。依托数学背景穿透 AI 底层逻辑。"
-            },
-            highlights: [
-                { metric: "3项", desc: "独立完成云端/Web/智能体项目落地，0到1全链路主导" },
-                { metric: "75%", desc: "缺乏文档环境下，解决OpenClaw底层依赖冲突并稳定运行" },
-                { metric: "极速开发", desc: "Vibe Coding 驱动，短周期跑通完整二手书交易平台" },
-                { metric: "校级大赛", desc: "AI+教育智能体核心策划，优化高数学习Prompt落地" }
-            ],
-            experiences: [
-                {
-                    title: "机器学习基础体系构建",
-                    organization: "自主学习 · 数学驱动研究",
-                    period: "2025.10 – 至今",
-                    details: [
-                        "系统推导线性回归、逻辑回归、SVM、决策树核心数学原理（梯度下降/损失函数/核函数）。",
-                        "建立从公式推导到算法设计的完整认知链路"
-                    ]
-                },
-                {
-                    title: "AI时间序列课题组",
-                    organization: "课题组实习生 · 时间序列预测方向",
-                    period: "2026.01 – 2026.02",
-                    details: [
-                        "复现并剖析 LSTM 核心逻辑，研究长序列数据处理中的状态更新与参数优化。",
-                        "系统性学习 Transformer 自注意力机制，对比RNN与Attention时序特征提取范式。"
-                    ]
-                }
-            ],
-            projects: [
-                {
-                    name: "OpenClaw 开源项目云端部署实践",
-                    stack: ["阿里云ECS", "Docker", "Linux", "依赖解析"],
-                    result: "2026年3月独立完成阿里云服务器全链路环境配置，解决多重底层依赖冲突，实现项目稳定拉起与运行，验证复杂开源项目部署能力。",
-                    period: "2026.03",
-                    link: "#"
-                },
-                {
-                    name: "基于 Vibe Coding 的二手书交易平台",
-                    stack: ["Trae AI引擎", "自然语言编程", "HTML/CSS/JS"],
-                    result: "以 Trae 为核心开发引擎，通过自然语言交互生成完整Web应用代码，快速跑通业务逻辑，验证AI赋能个人开发极高效率。",
-                    period: "2026.02 – 2026.03",
-                    link: "#"
-                },
-                {
-                    name: "“AI+教育”智能体应用开发",
-                    stack: ["Prompt Engineering", "大模型API", "教育逻辑设计"],
-                    result: "校级大赛核心策划，锚定高数学习痛点，设计专属智能体任务流，精细打磨教育Prompt，提升模型输出严谨性与可读性。",
-                    period: "2025.10 – 2025.11",
-                    link: "#"
-                },
-                {
-                    name: "基于 WorkBuddy + Obsidian 的个人知识库体系",
-                    stack: ["WorkBuddy", "Obsidian", "知识管理", "复盘方法", "内容创作"],
-                    result: "在浪尖儿社区持续AI学习氛围中，使用 WorkBuddy 作为效率中台，配合 Obsidian 搭建个人知识库，围绕「复盘反思」「个人经历」「学习辅导」「内容创作」四个模块设计，将碎片信息系统化，有效提升个人学习与任务闭环效率。",
-                    period: "2026.03 – 2026.05",
-                    link: "#"
-                }
-            ],
-            skills: [
-                { name: "Vibe Coding / AI敏捷开发", level: 82 },
-                { name: "Trae / Antigravity 编程工具", level: 80 },
-                { name: "机器学习理论（LR/SVM/决策树）", level: 85 },
-                { name: "时间序列分析 / LSTM / Transformer", level: 80 },
-                { name: "云端部署 (阿里云/Docker/排障)", level: 83 },
-                { name: "Python / 数据分析基础", level: 78 },
-                { name: "Prompt 工程 & 智能体设计", level: 84 },
-                { name: "数学建模 / 底层优化", level: 83 }
-            ],
-            education: {
-                degree: "数学与应用数学 本科",
-                school: "岭南师范学院 (岭师)",
-                period: "2025.09 – 2029.06",
-                description: "2025年9月入学，主修数学分析、高等代数、概率论、机器学习数学基础，具备严谨逻辑推演与算法建模能力。"
-            },
-            contributions: [
-                {
-                    icon: "🚀",
-                    title: "AI 敏捷开发实战分享",
-                    desc: "深度践行 Vibe Coding 范式，可组织 mini 工作坊，带社区成员体验从想法到代码的快速落地，激发 AI 项目灵感。"
-                },
-                {
-                    icon: "🧠",
-                    title: "AI 项目孵化与协创",
-                    desc: "利用数学与机器学习基础（LSTM、Transformer 等），协助社区识别潜力项目，参与从选题到 Demo 的全流程。"
-                },
-                {
-                    icon: "📚",
-                    title: "学习辅导与答疑",
-                    desc: "基于知识库中「学习辅导」模块，主动为成员解答高数、机器学习基础、Prompt 工程等问题，降低新人门槛。"
-                },
-                {
-                    icon: "✍️",
-                    title: "内容创作与知识沉淀",
-                    desc: "结合内容创作习惯，为社区撰写 AI 工具评测、学习路线图、项目复盘等文章，丰富社区内容资产。"
-                },
-                {
-                    icon: "🛠️",
-                    title: "效率工具与复盘文化",
-                    desc: "分享 WorkBuddy + Obsidian 知识库搭建经验，帮助社区成员建立个人复盘与知识管理习惯，提升整体协作效率。"
-                }
-            ]
-        };
-        
-        function escapeHtml(str) {
-            if(!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if(m === '&') return '&amp;';
-                if(m === '<') return '&lt;';
-                if(m === '>') return '&gt;';
-                return m;
-            });
-        }
-        
-        function renderApp() {
-            const root = document.getElementById("app-root");
-            if (!root) return;
-            root.innerHTML = `
-                <section id="hero" class="hero">
-                    <div class="hero-image">
-                        <img src="2.jpg" alt="基本信息介绍图" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22300%22%20viewBox%3D%220%200%20400%20300%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%233b82f6%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22white%22%20font-size%3D%2218%22%3E2.jpg%20(介绍图片)%3C%2Ftext%3E%3C%2Fsvg%3E'">
-                    </div>
-                    <div class="hero-content">
-                        <div class="hero-name">${escapeHtml(resume.basics.name)}</div>
-                        <div class="hero-tagline">${escapeHtml(resume.basics.tagline)}</div>
-                        <div class="hero-tagline" style="font-size:0.9rem;">${escapeHtml(resume.basics.bio)}</div>
-                        <div class="badge-group" id="hero-badges"></div>
-                        <div class="contact-row">
-                            <span class="contact-chip">📧 <span id="email-display">${escapeHtml(resume.basics.email.replace('@', ' [at] '))}</span> <button class="copy-btn" id="copyEmailBtn" aria-label="复制邮箱">📋</button></span>
-                            <span class="contact-chip">📞 ${escapeHtml(resume.basics.phone)}</span>
-                            <span class="contact-chip">📍 ${escapeHtml(resume.basics.city)}</span>
-                            <span class="contact-chip">🌐 ${escapeHtml(resume.basics.website)}</span>
-                        </div>
-                    </div>
-                </section>
-                <section id="highlights"><h2 class="section-title">✨ 亮点成果</h2><div class="highlights-grid" id="highlights-grid"></div></section>
-                <section id="exp-section"><h2 class="section-title">💼 学习与科研经历</h2><div class="tabs-container"><div class="tabs-header" id="exp-tab-header"></div><div id="exp-panes"></div></div></section>
-                <section id="projects-section"><h2 class="section-title">🚀 项目实践</h2><div class="tabs-container"><div class="tabs-header" id="project-tab-header"></div><div id="project-panes"></div></div></section>
-                <section id="skills"><h2 class="section-title">🛠️ 技能矩阵</h2><div class="skills-grid" id="skills-grid"></div></section>
-                <section id="education"><h2 class="section-title">🎓 教育背景</h2><div class="edu-card"><h3>${escapeHtml(resume.education.school)} · ${escapeHtml(resume.education.degree)}</h3><div style="color: var(--text-muted); margin: 0.3rem 0;">${escapeHtml(resume.education.period)}</div><p>${escapeHtml(resume.education.description)}</p></div></section>
-                <section id="contribution"><h2 class="section-title">🤝 我能为浪尖儿社区做什么</h2><div class="contribution-grid" id="contribution-grid"></div></section>
-                <footer><p>© 2025 achen · 持续探索 AI 前沿 · 浪尖儿社区候选人 · 最后更新 2026年5月</p></footer>
-            `;
-            const badges = ["Vibe Coding", "AI敏捷开发", "时间序列/LSTM", "云端部署", "数学建模", "Prompt工程"];
-            document.getElementById("hero-badges").innerHTML = badges.map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('');
-            document.getElementById("highlights-grid").innerHTML = resume.highlights.map(h => `<div class="highlight-card"><div class="highlight-number">${escapeHtml(h.metric)}</div><div>${escapeHtml(h.desc)}</div></div>`).join('');
-            const expHeader = document.getElementById("exp-tab-header");
-            const expPanes = document.getElementById("exp-panes");
-            expHeader.innerHTML = resume.experiences.map((exp, idx) => `<button class="tab-btn" data-exp-tab="${idx}">${escapeHtml(exp.title)}</button>`).join('');
-            expPanes.innerHTML = resume.experiences.map((exp, idx) => `<div class="tab-pane" data-exp-pane="${idx}"><div class="exp-card"><div class="exp-title">${escapeHtml(exp.title)}</div><div class="exp-meta">${escapeHtml(exp.organization)} · ${escapeHtml(exp.period)}</div><ul class="exp-desc">${exp.details.map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul></div></div>`).join('');
-            const projHeader = document.getElementById("project-tab-header");
-            const projPanes = document.getElementById("project-panes");
-            projHeader.innerHTML = resume.projects.map((proj, idx) => `<button class="tab-btn" data-proj-tab="${idx}">${escapeHtml(proj.name)}</button>`).join('');
-            projPanes.innerHTML = resume.projects.map((proj, idx) => `
-                <div class="tab-pane" data-proj-pane="${idx}">
-                    <div class="project-card">
-                        <div class="exp-title">${escapeHtml(proj.name)}</div>
-                        <div class="exp-meta">📅 ${escapeHtml(proj.period)}</div>
-                        <div class="tech-stack">${proj.stack.map(s => `<span class="tech-tag">${escapeHtml(s)}</span>`).join('')}</div>
-                        <p style="margin:0.8rem 0;">${escapeHtml(proj.result)}</p>
-                    </div>
-                </div>
-            `).join('');
-            document.getElementById("skills-grid").innerHTML = resume.skills.map(skill => `
-                <div class="skill-item">
-                    <div class="skill-name">${escapeHtml(skill.name)}</div>
-                    <div class="progress-bar"><div class="progress-fill" style="width: ${skill.level}%;"></div></div>
-                    <span>${skill.level}%</span>
-                </div>
-            `).join('');
-            document.getElementById("contribution-grid").innerHTML = resume.contributions.map(c => `
-                <div class="contribution-card">
-                    <div class="contribution-icon">${c.icon}</div>
-                    <div class="contribution-title">${escapeHtml(c.title)}</div>
-                    <div style="color: var(--text-secondary); font-size:0.85rem;">${escapeHtml(c.desc)}</div>
-                </div>
-            `).join('');
-            document.getElementById("copyEmailBtn")?.addEventListener('click', () => { navigator.clipboard.writeText(resume.basics.email); alert("邮箱已复制"); });
-            document.querySelectorAll('[data-exp-tab]').forEach((btn,i)=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-exp-pane]').forEach((p,pi)=>p.classList.toggle('active-pane',pi==i));document.querySelectorAll('[data-exp-tab]').forEach((b,bi)=>b.classList.toggle('active',bi==i));}));
-            document.querySelectorAll('[data-proj-tab]').forEach((btn,i)=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-proj-pane]').forEach((p,pi)=>p.classList.toggle('active-pane',pi==i));document.querySelectorAll('[data-proj-tab]').forEach((b,bi)=>b.classList.toggle('active',bi==i));}));
-            if(document.querySelector('[data-exp-tab]')) document.querySelector('[data-exp-tab]').click();
-            if(document.querySelector('[data-proj-tab]')) document.querySelector('[data-proj-tab]').click();
-        }
-        function initInteractions() {
-            const themeBtn = document.getElementById("themeToggle");
-            const printBtn = document.getElementById("printBtn");
-            const backBtn = document.getElementById("back2top");
-            const stored = localStorage.getItem("theme");
-            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            if (stored === "dark" || (!stored && prefersDark)) document.body.classList.add("dark");
-            themeBtn?.addEventListener("click", () => { document.body.classList.toggle("dark"); localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light"); });
-            printBtn?.addEventListener("click", () => window.print());
-            backBtn?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-            document.querySelectorAll('.nav-links a').forEach(anchor => { anchor.addEventListener('click', function(e) { const href = this.getAttribute('href'); if(href?.startsWith('#')) { e.preventDefault(); document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' }); } }); });
-        }
-        window.addEventListener('DOMContentLoaded', () => { renderApp(); initInteractions(); });
-    </script>
+    <!-- 成果摘要 -->
+    <section class="sec" id="highlights">
+      <div class="kicker">In Numbers</div>
+      <h2>用数字说话</h2>
+      <div class="grid g4">
+        <div class="card rv"><div class="num">4</div><div class="num-sub">项竞赛获奖</div><p>校级数模二等奖 · 数维杯/创新杯全国优秀奖 · 校级数竞三等奖</p></div>
+        <div class="card rv"><div class="num">3</div><div class="num-sub">个完整项目</div><p>AI+教育智能体、二手书交易平台、OpenClaw 云端部署均已落地</p></div>
+        <div class="card rv"><div class="num">4.06</div><div class="num-sub">绩点 / 5.0</div><p>大一 3.93 → 大一下 4.06，靠稳定前进而非爆发</p></div>
+        <div class="card rv"><div class="num">10</div><div class="num-sub">个月自学→落地</div><p>2025.10 开始系统自学机器学习，一路做到项目上线</p></div>
+      </div>
+    </section>
+
+    <!-- 关于我 -->
+    <section class="sec" id="about">
+      <div class="kicker">About</div>
+      <h2>关于我</h2>
+      <div class="about-info">
+        <div class="info-item rv"><div class="k">教育背景</div><div class="v">岭南师范学院 · 数学与应用数学 · 本科（2025–2029）</div></div>
+        <div class="info-item rv"><div class="k">学业表现</div><div class="v">绩点 4.06 / 5.0（大一上 3.93 → 大一下 4.06，稳步提升）</div></div>
+        <div class="info-item rv"><div class="k">学生工作</div><div class="v">校招生与就业处 · 招生科学生助理（2025.09–至今）</div></div>
+        <div class="info-item rv"><div class="k">专业方向</div><div class="v">数学 × AI（机器学习 / 时间序列 / 云端部署 / Prompt 工程）</div></div>
+      </div>
+      <div class="sub-h"><span class="emo">✦</span>个人特质</div>
+      <div class="traits">
+        <div class="trait rv"><b><span class="dot"></span>兴趣驱动 · 敢想敢试</b><p>喜欢一个东西就立刻去学、去做；相信踏出第一步会有意想不到的收获。</p></div>
+        <div class="trait rv"><b><span class="dot"></span>AI 务实 · 动手落地</b><p>让 AI 干活、自己把握逻辑与决策，不迷信工具，把想法做成真正的东西。</p></div>
+        <div class="trait rv"><b><span class="dot"></span>自驱 · 目标感强</b><p>认准「数学 × AI」主线持续深耕，靠稳定前进而非爆发。</p></div>
+        <div class="trait rv"><b><span class="dot"></span>韧性 · 对自己诚实</b><p>失败会难过，但难过完继续投入；不装、不回避短板，用一次次成长说话。</p></div>
+      </div>
+      <div class="sub-h" style="margin-top:1.5rem"><span class="emo">✦</span>兴趣爱好</div>
+      <div class="hobby-list"><span class="tag">轮滑</span><span class="tag">探索 AI</span><span class="tag">尤克里里</span><span class="tag">看技术文</span><span class="tag">听歌</span></div>
+    </section>
+
+    <!-- 技能 + 方法论 -->
+    <section class="sec" id="skills">
+      <div class="kicker">Skills</div>
+      <h2>技能与我的做事方法</h2>
+      <div class="tier rv"><div class="tierhead"><span class="pill">熟练掌握</span>能独立、熟练使用并落地</div>
+        <div class="tags"><span class="tag">AI 敏捷开发（Vibe Coding）</span><span class="tag">云端部署与排障（阿里云 / Docker / Linux）</span><span class="tag">Prompt 工程与智能体</span></div></div>
+      <div class="tier rv"><div class="tierhead"><span class="pill">进阶掌握</span>掌握原理、能应用、仍在加深</div>
+        <div class="tags"><span class="tag">机器学习理论（LR / SVM / 决策树）</span><span class="tag">时间序列 / LSTM / Transformer</span><span class="tag">Python 与数据分析</span><span class="tag">数学建模</span></div></div>
+      <div class="tier rv"><div class="tierhead"><span class="pill">了解入门</span>有认知、在入门</div>
+        <div class="tags"><span class="tag">前端基础（HTML / CSS / JS）</span><span class="tag">JavaScript（DSH 插件）</span><span class="tag">Linux 运维</span></div></div>
+
+      <div class="sub-h"><span class="emo">✦</span>我的方法论（怎么做事）</div>
+      <div class="method">
+        <div class="card rv"><div class="lbl">知识库体系</div><h3>Obsidian</h3><p>把碎片学习沉淀成可复用、可复盘的知识网络。</p></div>
+        <div class="card rv"><div class="lbl">工作流</div><h3>Vibe Coding</h3><p>用自然语言 + AI 工具把想法快速落地，AI 干活、人审逻辑。</p></div>
+      </div>
+    </section>
+
+    <!-- 作品集 -->
+    <section class="sec" id="work">
+      <div class="kicker">Works</div>
+      <h2>作品与成果</h2>
+      <div class="sub-h"><span class="emo">✦</span>荣誉 / 奖项</div>
+      <div class="awards">
+        <div class="award rv"><div class="rank">1</div><div><div class="tt">岭南师范学院数学建模比赛 <span class="st">二等奖</span> <span style="color:var(--tx3);font-size:.8rem;margin-left:.3rem">2026.06</span></div><div class="ds">校级 · 负责建模与编程 · 用 AI 辅助交互</div></div></div>
+        <div class="award rv"><div class="rank">2</div><div><div class="tt">2026 数维杯大学生数学建模竞赛春季赛 <span class="st">优秀奖</span> <span style="color:var(--tx3);font-size:.8rem;margin-left:.3rem">2026.05</span></div><div class="ds">全国性赛事 · 负责建模与编程 · 用 AI 辅助交互</div></div></div>
+        <div class="award rv"><div class="rank">3</div><div><div class="tt">2026 创新杯大数据挑战赛 <span class="st">优秀奖</span> <span style="color:var(--tx3);font-size:.8rem;margin-left:.3rem">2026.07</span></div><div class="ds">全国性赛事 · 负责建模与编程 · 用 AI 辅助交互</div></div></div>
+        <div class="award rv"><div class="rank">4</div><div><div class="tt">岭南师范学院数学竞赛 <span class="st">三等奖</span> <span style="color:var(--tx3);font-size:.8rem;margin-left:.3rem">2026.05</span></div><div class="ds">校级 · 数学竞赛</div></div></div>
+      </div>
+
+      <div class="sub-h"><span class="emo">✦</span>已完成成果</div>
+      <div class="proj-grid">
+        <div class="proj rv">
+          <div class="ph"><h3>「AI+教育」智能体</h3><span class="pb">校级大赛 · 核心策划与开发</span></div>
+          <p class="brief">面向高数学习痛点的首个 AI 项目尝试，把抽象的高数知识转化为可交互的学习体验。</p>
+          <ul class="points">
+            <li>从高数学习规律出发设计智能体任务流</li>
+            <li>打磨教育领域 Prompt，约束模型输出逻辑</li>
+            <li>未获奖，但完成了 AI 项目从零到一的完整闭环</li>
+          </ul>
+          <div class="contrib">我的贡献：核心策划与开发，独立设计教育逻辑与 Prompt 体系。</div>
+          <div class="tags"><span class="tag">Prompt 工程</span><span class="tag">智能体设计</span><span class="tag">AI+教育</span></div>
+        </div>
+        <div class="proj rv">
+          <div class="ph"><h3>二手书交易平台</h3><span class="pb">Vibe Coding · 独立开发</span></div>
+          <p class="brief">用自然语言驱动 AI 编程工具，在短周期内跑通一个具备基础业务逻辑的 Web 应用。</p>
+          <ul class="points">
+            <li>以 Trae 为核心开发引擎，用自然语言引导 AI 生成代码</li>
+            <li>快速验证「需求 → 原型 → 可运行应用」的敏捷路径</li>
+            <li>跑通发布前的完整业务链路</li>
+          </ul>
+          <div class="contrib">我的贡献：独立开发，从产品思路到可用应用全链路推进。</div>
+          <div class="tags"><span class="tag">Vibe Coding</span><span class="tag">Trae</span><span class="tag">Web 应用</span></div>
+        </div>
+        <div class="proj rv">
+          <div class="ph"><h3>OpenClaw 云端部署</h3><span class="pb">独立部署</span></div>
+          <p class="brief">在阿里云独立完成前沿开源 AI 项目 OpenClaw 的运行环境搭建与排障。</p>
+          <ul class="points">
+            <li>研读官方文档，解决多重底层依赖冲突</li>
+            <li>搭建 Linux / Docker 相关运行环境</li>
+            <li>项目最终稳定拉起并运行</li>
+          </ul>
+          <div class="contrib">我的贡献：独立负责环境搭建、依赖分析与排障，跑通云端全链路。</div>
+          <div class="tags"><span class="tag">阿里云</span><span class="tag">Linux</span><span class="tag">依赖排障</span></div>
+        </div>
+        <div class="proj rv">
+          <div class="ph"><h3>Obsidian 个人知识库</h3><span class="pb">方法论 · 持续搭建</span></div>
+          <p class="brief">把碎片学习、复盘与创作沉淀成体系化的知识网络，成为持续输出的基础设施。</p>
+          <ul class="points">
+            <li>建立复盘 / 学习 / 创作等模块结构</li>
+            <li>把 AI 探索、数学学习、项目经验统一归档</li>
+            <li>和 Vibe Coding 工作流互相配合，形成闭环</li>
+          </ul>
+          <div class="contrib">我的贡献：独立设计知识库架构并持续维护（2026.03–至今）。</div>
+          <div class="tags"><span class="tag">Obsidian</span><span class="tag">知识管理</span><span class="tag">工作流</span></div>
+        </div>
+      </div>
+
+      <div class="sub-h"><span class="emo">✦</span>进行中的探索</div>
+      <div class="explore">
+        <div class="exp rv"><div class="et">WorkBuddy Nova 计划</div><div class="ed">探索 AI 智能体协作的新工作流，尝试把更多日常任务自动化。</div></div>
+        <div class="exp rv"><div class="et">TraeWork</div><div class="ed">用 AI 辅助材料处理与实践，把 Trae 从写代码扩展到更多工作场景。</div></div>
+        <div class="exp rv"><div class="et">DSH 插件开发</div><div class="ed">dsh-token-hover-bar：浏览器插件方向的前端实践，边学 JS 边做。</div></div>
+      </div>
+    </section>
+
+    <!-- 成长记录 -->
+    <section class="sec" id="timeline">
+      <div class="kicker">Growth</div>
+      <h2>成长轨迹</h2>
+      <div class="timeline">
+        <div class="tl-item rv"><div class="date">2025.09</div><div class="txt">入学岭南师范学院 · 数学与应用数学 · 开启数学 × AI 探索之路</div></div>
+        <div class="tl-item rv"><div class="date">2025.09–至今</div><div class="txt">校招生与就业处 · 招生科学生助理</div></div>
+        <div class="tl-item rv"><div class="date">2025.10</div><div class="txt">系统自学机器学习；尝试「AI+教育」智能体（首次 AI 项目）</div></div>
+        <div class="tl-item rv"><div class="date">2026.01–02</div><div class="txt">AI 时间序列课题组（实习生）· 复现 LSTM、学习 Transformer</div></div>
+        <div class="tl-item rv"><div class="date">2026.02–03</div><div class="txt">二手书交易平台（Vibe Coding）+ OpenClaw 云端部署</div></div>
+        <div class="tl-item rv"><div class="date">2026.03–至今</div><div class="txt">搭建 Obsidian 个人知识库体系</div></div>
+        <div class="tl-item rv"><div class="date">2026.05</div><div class="txt">数维杯大学生数学建模竞赛春季赛 · 优秀奖 · 校级数学竞赛 · 三等奖</div></div>
+        <div class="tl-item rv"><div class="date">2026.06</div><div class="txt">岭南师范学院数学建模比赛 · 二等奖</div></div>
+        <div class="tl-item rv"><div class="date">2026.07</div><div class="txt">创新杯大数据挑战赛 · 优秀奖</div></div>
+        <div class="tl-item rv"><div class="date">2026.07</div>
+          <div class="txt">三下乡 · 副队长</div>
+          <div class="sub">辅助队长统筹团队，对接学校与当地团委；开设 AI 通识课，以《千里江山图》3D 动态演示为例带孩子认识 AI 交互。</div>
+        </div>
+        <div class="tl-item rv"><div class="date">2026.07–至今</div><div class="txt">云支教 · 志愿者（线上一对一辅导）</div></div>
+        <div class="tl-item rv"><div class="date">2026–至今</div><div class="txt">WorkBuddy Nova 计划 · TraeWork · DSH 插件开发</div></div>
+      </div>
+    </section>
+
+    <!-- 联系 -->
+    <section class="sec" id="contact">
+      <div class="kicker">Contact</div>
+      <h2>联系我</h2>
+      <div class="contact">
+        <div class="card rv">
+          <div class="lab"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>邮箱</div>
+          <div class="val">ywxc1109 [at] qq.com <button class="copy" id="copyEmail" title="复制邮箱">⧉</button></div>
+        </div>
+        <div class="card rv">
+          <div class="lab"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>手机号</div>
+          <div class="val">18318163457</div>
+        </div>
+        <div class="card rv">
+          <div class="lab"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>城市</div>
+          <div class="val">广东湛江</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="sig">用数学穿透 AI，用 AI 加速落地</div>
+      <div>© 2026 梁晶晶 · 数学 × AI 敏捷开发</div>
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(function(a){
+      a.addEventListener('click',function(e){
+        var id=a.getAttribute('href'); if(id&&id.length>1){var t=document.querySelector(id); if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}}
+      });
+    });
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});},{threshold:.12});
+    document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
+    var c=document.getElementById('copyEmail');
+    if(c){c.addEventListener('click',function(){navigator.clipboard.writeText('ywxc1109@qq.com');c.textContent='✓';setTimeout(function(){c.textContent='⧉';},1600);});}
+    var menuBtn=document.querySelector('.menu-btn');
+    var navLinks=document.querySelector('.links');
+    if(menuBtn&&navLinks){
+      menuBtn.addEventListener('click',function(){navLinks.classList.toggle('open');});
+      navLinks.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){navLinks.classList.remove('open');});});
+    }
+  </script>
 </body>
 </html>
